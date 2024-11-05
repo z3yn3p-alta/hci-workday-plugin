@@ -13,7 +13,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 messages: [
                     {
                         role: "user",
-                        content: `Simplify these course requirements: ${request.text}. Respond only with the numbered requirements. Avoid repetition.`
+                        content: `Simplify these course requirements: ${request.text}. Avoid repetition.`
 
                     }
                 ]

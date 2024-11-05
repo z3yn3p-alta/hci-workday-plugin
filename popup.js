@@ -14,15 +14,29 @@ document.addEventListener('DOMContentLoaded', () => {
             const selectedTextDiv = document.getElementById('selectedText');
 
             if (textFromDiv) {
-              chrome.runtime.sendMessage({ action: "getOpenAIResponse", text: textFromDiv }, (response) => {
-                if (response.error) {
-                  selectedTextDiv.innerText = response.error;
+              // Generate a unique key for this text
+              const cacheKey = `openai_response_${btoa(textFromDiv)}`; // Base64 encoding for a unique key
+
+              // Check if the response is already saved in chrome.storage
+              chrome.storage.local.get([cacheKey], (data) => {
+                if (data[cacheKey]) {
+                  // Display cached response
+                  selectedTextDiv.innerText = data[cacheKey];
                 } else {
-                  selectedTextDiv.innerText = response.titles;
+                  // If no cached response, request from OpenAI API
+                  chrome.runtime.sendMessage({ action: "getOpenAIResponse", text: textFromDiv }, (response) => {
+                    if (response.error) {
+                      selectedTextDiv.innerText = response.error;
+                    } else {
+                      selectedTextDiv.innerText = response.titles;
+                      // Save the response in chrome.storage for future use
+                      chrome.storage.local.set({ [cacheKey]: response.titles });
+                    }
+                  });
                 }
               });
             } else {
-              selectedTextDiv.innerText = 'Loading';
+              selectedTextDiv.innerText = 'No Course Requirements';
             }
           }
       );
@@ -34,17 +48,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Function to capture the text from the block after the label containing "Eligibility"
 const captureTextAfterEligibility = () => {
-  // Find all label elements and filter for the one that contains "Eligibility"
   const eligibilityLabel = Array.from(document.querySelectorAll('label[data-automation-id="formLabel"]'))
       .find(label => label.innerText.trim() === 'Eligibility');
 
-  // If found, get the parent <li> and then the next block of interest
   if (eligibilityLabel) {
-    const liElement = eligibilityLabel.closest('li'); // Get the closest <li>
-    const nextDiv = liElement.querySelector('.WLJY.WOJY.WFMY.WGMY.WKHY.WNJY.WF5.WMJY'); // Target the desired block after the <label>
-
-    return nextDiv ? nextDiv.innerText.trim() : null; // Return the text from the next block
+    const liElement = eligibilityLabel.closest('li');
+    const nextDiv = liElement.querySelector('div[data-automation-id="richTextEditor"][data-uxi-widget-editable="false"]');
+    return nextDiv ? nextDiv.innerHTML.trim() : 'Target div not found after Eligibility label';
   }
-
-  return 'No course requirements detected';
+  return null;
 };
