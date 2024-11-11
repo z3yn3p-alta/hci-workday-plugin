@@ -12,12 +12,12 @@ document.addEventListener('DOMContentLoaded', () => {
           (result) => {
             const textFromDiv = result[0].result;
             const selectedTextDiv = document.getElementById('selectedText');
-
             if (textFromDiv) {
-              const cacheKey = `openai_response_${btoa(textFromDiv)}`; // Unique key for caching
+              const cacheKey = `openai_response_${btoa(url)}`;
               chrome.storage.local.get([cacheKey], (data) => {
                 if (data[cacheKey]) {
-                  selectedTextDiv.innerText = data[cacheKey];
+                  injectResponseIntoPage(data[cacheKey]);
+                  closePopup();
                 } else {
                   requestOpenAIResponse(textFromDiv, cacheKey, selectedTextDiv);
                 }
@@ -33,7 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-
 function requestOpenAIResponse(text, cacheKey, selectedTextDiv) {
   chrome.runtime.sendMessage({ action: "getOpenAIResponse", text: text }, (response) => {
     if (response.error) {
@@ -41,14 +40,47 @@ function requestOpenAIResponse(text, cacheKey, selectedTextDiv) {
     } else {
       selectedTextDiv.innerText = response.titles;
       chrome.storage.local.set({ [cacheKey]: response.titles });
+      injectResponseIntoPage(response.titles);
+      closePopup();
     }
   });
+}
+
+function injectResponseIntoPage(responseText) {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    const tab = tabs[0];
+    chrome.scripting.executeScript(
+        {
+          target: { tabId: tab.id },
+          func: updatePageContent,
+          args: [responseText],
+        },
+        () => {
+          console.log('Injected response into page.');
+        }
+    );
+  });
+}
+
+function updatePageContent(responseText) {
+  const eligibilityLabel = Array.from(document.querySelectorAll('label[data-automation-id="formLabel"]'))
+      .find(label => label.innerText.trim() === 'Eligibility');
+  if (eligibilityLabel) {
+    const liElement = eligibilityLabel.closest('li');
+    const nextDiv = liElement.querySelector('div[data-automation-id="richTextEditor"][data-uxi-widget-editable="false"]');
+    if (nextDiv) {
+      nextDiv.innerHTML = responseText;
+    }
+  }
+}
+
+function closePopup() {
+  window.close();
 }
 
 const captureTextAfterEligibility = () => {
   const eligibilityLabel = Array.from(document.querySelectorAll('label[data-automation-id="formLabel"]'))
       .find(label => label.innerText.trim() === 'Eligibility');
-
   if (eligibilityLabel) {
     const liElement = eligibilityLabel.closest('li');
     const nextDiv = liElement.querySelector('div[data-automation-id="richTextEditor"][data-uxi-widget-editable="false"]');
@@ -56,51 +88,3 @@ const captureTextAfterEligibility = () => {
   }
   return null;
 };
-
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.contextMenus.create({
-    id: "removeEntry",
-    title: "Remove Entry from Storage",
-    contexts: ["all"]
-  });
-});
-
-chrome.contextMenus.onClicked.addListener((info, tab) => {
-  if (info.menuItemId === "removeEntry") {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs.length > 0 && tabs[0].id > 0) {
-        const activeTabId = tabs[0].id;
-        chrome.scripting.executeScript(
-            {
-              target: { tabId: activeTabId },
-              function: captureTextAfterEligibility,
-            },
-            (result) => {
-              if (chrome.runtime.lastError) {
-                console.error("Scripting error:", chrome.runtime.lastError.message);
-                return;
-              }
-              if (result && result[0] && result[0].result) {
-                const textFromDiv = result[0].result;
-                const cacheKey = `openai_response_${btoa(textFromDiv)}`;
-                const selectedTextDiv = document.getElementById('selectedText');
-                selectedTextDiv.innerText = 'Loading...';
-                chrome.storage.local.remove(cacheKey, () => {
-                  if (chrome.runtime.lastError) {
-                    console.error("Error removing entry:", chrome.runtime.lastError);
-                  } else {
-                    console.log(`Entry removed for key: ${cacheKey}`);
-                    requestOpenAIResponse(textFromDiv, cacheKey, selectedTextDiv);
-                  }
-                });
-              } else {
-                console.log("No eligibility text found to remove.");
-              }
-            }
-        );
-      } else {
-        console.log("No active tab found or invalid tab ID.");
-      }
-    });
-  }
-});

@@ -1,6 +1,6 @@
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "getOpenAIResponse") {
-
+        let apiKey = ''
         fetch("https://api.openai.com/v1/chat/completions", {
             method: "POST",
             headers: {
@@ -12,7 +12,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 messages: [
                     {
                         role: "user",
-                        content: `Simplify these course requirements: ${request.text}. Avoid repetition.`
+                        content: `Simplify these course requirements: ${request.text}. Try to use as simple language as possible. Avoid repetition.`
 
                     }
                 ]
