@@ -53,6 +53,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
                             return;
                         }
                         if (result && result[0] && result[0].result) {
+                            const url = tab.url;
                             const cacheKey = `openai_response_${btoa(url)}`;
                             chrome.storage.local.remove(cacheKey, () => {
                                 if (chrome.runtime.lastError) {
