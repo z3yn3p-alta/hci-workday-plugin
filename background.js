@@ -53,8 +53,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
                             return;
                         }
                         if (result && result[0] && result[0].result) {
-                            const textFromDiv = result[0].result; // Captured eligibility text
-                            const cacheKey = `openai_response_${btoa(textFromDiv)}`;
+                            const cacheKey = `openai_response_${btoa(url)}`;
                             chrome.storage.local.remove(cacheKey, () => {
                                 if (chrome.runtime.lastError) {
                                     console.error("Error removing entry:", chrome.runtime.lastError);
