@@ -10,14 +10,26 @@
       padding: 10px;
       overflow-y: auto;
       display: flex;
-      align-items: center;
+      flex-direction: column;
       justify-content: center;
-      text-align: left;
+      align-items: center;
     }
 
     #selectedText {
       margin: 0;
       font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    #buttonSection {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+
+    button {
+      padding: 10px;
+      cursor: pointer;
     }
   </style>
   <script src="popup.js"></script>
@@ -25,6 +37,9 @@
 <body>
 <div id="container">
   <div id="selectedText">Loading...</div>
+  <div id="buttonSection">
+    <button id="openPDFButton">Open Guide</button>
+  </div>
 </div>
 </body>
 </html>
