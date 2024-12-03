@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const openPDFButton = document.getElementById('openPDFButton');
     if (openPDFButton) {
       openPDFButton.addEventListener('click', () => {
-        window.open("https://hr.howard.edu/sites/hr.howard.edu/files/2022-10/HOWARD%20Workday%20Newsletter%20Oct2022_FINAL_10.4.20.cs_.pdf", "_blank");
+        window.open("https://drive.google.com/file/d/1tjoHJwiDtf94Z2XQNmVQuMEKnwPb1Ehn/view?usp=sharing", "_blank");
       });
     }
   });
