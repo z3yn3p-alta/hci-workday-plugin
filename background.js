@@ -1,6 +1,6 @@
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "getOpenAIResponse") {
-        let apiKey = ''
+        let apiKey = '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'
         fetch("https://api.openai.com/v1/chat/completions", {
             method: "POST",
             headers: {
